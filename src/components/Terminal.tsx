@@ -1,7 +1,7 @@
 import  { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import TypewriterText from './TypewriterText';
-
+import type { ChangeEvent } from 'react';
 
 interface CommandContent {
   text: string;
@@ -187,7 +187,7 @@ const handleCommand = (cmd:string) => {
     }
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleCommand(input.trim());
       setInput("");
