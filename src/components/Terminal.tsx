@@ -21,16 +21,51 @@ interface Line {
   type: string;
 }
 
-const Terminal = () => {
-  const [lines, setLines] = useState<Line[]>([
-    { output: "Welcome to my portfolio! Type \"help\" to see available commands.", type: "welcome" }
-  ]);
+const bootSequence = [
+  "Initializing portfolio environment...",
+  "Loading projects...",
+  "Loading skills modules...",
+  "Loading contact info...",
+  "Environment ready ✅"
+];
+
+interface TerminalProps {
+  whiteGradient: boolean;
+}
+
+const Terminal = ({ whiteGradient }: TerminalProps) => {
+  const [lines, setLines] = useState<Line[]>([]);
   const [input, setInput] = useState("");
+  const [booting, setBooting] = useState(true);
+  const [suggestion, setSuggestion] = useState<string | null>(null);
+  const [theme, setTheme] = useState<'default' | 'hacker' | 'light'>('default');
+  const [history, setHistory] = useState<string[]>(() => {
+    const saved = localStorage.getItem('terminalHistory');
+    return saved ? JSON.parse(saved) : [];
+  });
   const bottomRef = useRef<HTMLDivElement|null>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [lines]);
+
+  // Boot sequence effect
+  useEffect(() => {
+    if (booting) {
+      let index = 0;
+      const interval = setInterval(() => {
+        if (index < bootSequence.length) {
+          setLines(prev => [...prev, { output: bootSequence[index], type: 'boot' }]);
+          index++;
+        } else {
+          setBooting(false);
+          setLines(prev => [...prev, { output: "Welcome to my portfolio! Type \"help\" to see available commands.", type: "welcome" }]);
+          clearInterval(interval);
+        }
+      }, 500); // 500ms per line
+      return () => clearInterval(interval);
+    }
+  }, [booting]);
 
  const commands: Record<string, Command> = {
   help: {
@@ -44,8 +79,19 @@ const Terminal = () => {
       { text: "• education - View my education", color: "text-green-300" },
       { text: "• resume - Download my resume", color: "text-green-300" },
       { text: "• contact - Get my contact information", color: "text-green-300" },
+      { text: "• story - Read my coding journey", color: "text-green-300" },
+      { text: "• goals - See my professional goals", color: "text-green-300" },
+      { text: "• social - View my social links", color: "text-green-300" },
       { text: "• clear - Clear the terminal", color: "text-green-300" },
       { text: "• help - Show this help message", color: "text-green-300" },
+      { text: "", color: "" },
+      { text: "Utility commands:", color: "text-cyan-400" },
+      { text: "• theme [hacker|default|light] - Switch terminal theme", color: "text-cyan-300" },
+      { text: "• history - Show command history", color: "text-cyan-300" },
+      { text: "• quote - Display a random programming quote", color: "text-cyan-300" },
+      { text: "• time - Show current time", color: "text-cyan-300" },
+      { text: "• date - Show current date", color: "text-cyan-300" },
+      { text: "• sudo [command] - Try to run as superuser (Easter egg)", color: "text-cyan-300" },
     ],
   },
 
@@ -167,11 +213,115 @@ const Terminal = () => {
       },
     ],
   },
+
+  story: {
+    type: "story",
+    content: [
+      { text: "👦 My Journey:", color: "text-yellow-400 font-bold" },
+      { text: "", color: "" },
+      { text: "I started coding in high school out of curiosity and fell in love with the logic behind software. Over the years, I've worked with web, cloud, and AI technologies to build real-world solutions.", color: "text-yellow-300" },
+      { text: "My vision is to combine technology and creativity to build systems that make a difference.", color: "text-yellow-300" }
+    ]
+  },
+
+  goals: {
+    type: "goals",
+    content: [
+      { text: "🎯 Goals:", color: "text-pink-400 font-bold" },
+      { text: "", color: "" },
+      { text: "1️⃣ Master Cloud & DevOps", color: "text-pink-300" },
+      { text: "2️⃣ Contribute to Open Source", color: "text-pink-300" },
+      { text: "3️⃣ Build AI-powered web platforms", color: "text-pink-300" }
+    ]
+  },
+
+  social: {
+    type: "social",
+    content: [
+      { text: "🌍 Social Links:", color: "text-emerald-400 font-bold" },
+      { text: "GitHub:", color: "text-emerald-300 font-semibold", inline: true },
+      { text: " github.com/AbeerSrivastava", color: "text-emerald-300 cursor-pointer hover:text-emerald-400" },
+      { text: "LinkedIn:", color: "text-emerald-300 font-semibold", inline: true },
+      { text: " linkedin.com/in/abeersrivastava", color: "text-emerald-300 cursor-pointer hover:text-emerald-400" }
+    ]
+  },
 };
 
 const handleCommand = (cmd:string) => {
+    // Add command to history
+    const newHistory = [...history, cmd];
+    setHistory(newHistory);
+    localStorage.setItem('terminalHistory', JSON.stringify(newHistory));
+
     if (cmd === 'clear') {
       setLines([]);
+      return;
+    }
+
+    // Theme command
+    if (cmd === 'theme hacker' || cmd === 'theme default' || cmd === 'theme light') {
+      const selected = cmd.split(' ')[1] as 'default' | 'hacker' | 'light';
+      setTheme(selected);
+      setLines([...lines, {
+        prompt: `abeer@portfolio : ~ $ ${cmd}`,
+        output: [{ text: `Theme changed to ${selected} mode`, color: "text-green-400" }],
+        type: 'theme'
+      }]);
+      return;
+    }
+
+    // History command
+    if (cmd === 'history') {
+      const historyOutput = history.map((h, i) => ({
+        text: `${i + 1}. ${h}`,
+        color: "text-amber-300"
+      }));
+      setLines([...lines, { 
+        prompt: `abeer@portfolio : ~ $ ${cmd}`, 
+        output: historyOutput, 
+        type: 'history' 
+      }]);
+      return;
+    }
+
+    // Quote command
+    if (cmd === 'quote') {
+      const quotes = [
+        "\"Programs must be written for people to read, and only incidentally for machines to execute.\" – Harold Abelson",
+        "\"Talk is cheap. Show me the code.\" – Linus Torvalds",
+        "\"First, solve the problem. Then, write the code.\" – John Johnson",
+        "\"Simplicity is the soul of efficiency.\" – Austin Freeman",
+        "\"Code is like humor. When you have to explain it, it's bad.\" – Cory House",
+        "\"The best error message is the one that never shows up.\" – Thomas Fuchs",
+        "\"Any fool can write code that a computer can understand. Good programmers write code that humans can understand.\" – Martin Fowler"
+      ];
+      const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+      setLines([...lines, { 
+        prompt: `abeer@portfolio : ~ $ ${cmd}`, 
+        output: [{ text: randomQuote, color: "text-indigo-400 italic" }], 
+        type: 'quote' 
+      }]);
+      return;
+    }
+
+    // Time and date commands
+    if (cmd === 'time' || cmd === 'date') {
+      const now = new Date();
+      const formatted = cmd === 'time' ? now.toLocaleTimeString() : now.toDateString();
+      setLines([...lines, { 
+        prompt: `abeer@portfolio : ~ $ ${cmd}`, 
+        output: [{ text: formatted, color: "text-cyan-300" }], 
+        type: 'time' 
+      }]);
+      return;
+    }
+
+    if (cmd.startsWith('sudo')) {
+      setLines([...lines, { 
+        prompt: `abeer@portfolio : ~ $ ${cmd}`, 
+        output: [{ text: "System meltdown averted. Nice try hacker", color: "text-red-400" }], 
+        type: 'error' 
+      }]);
       return;
     }
 
@@ -195,6 +345,18 @@ const handleCommand = (cmd:string) => {
     if (e.key === 'Enter') {
       handleCommand(input.trim());
       setInput("");
+      setSuggestion(null);
+    }
+
+    if (e.key === 'Tab') {
+      e.preventDefault(); // prevent losing focus
+      const possible = Object.keys(commands).filter(cmd => cmd.startsWith(input));
+      if (possible.length === 1) {
+        setInput(possible[0]); // auto-complete
+        setSuggestion(null);
+      } else if (possible.length > 1) {
+        setSuggestion(possible.join(" | ")); // show multiple options
+      }
     }
   };
 
@@ -204,7 +366,14 @@ const handleCommand = (cmd:string) => {
       if (type === 'welcome') {
         return <TypewriterText text={output} className="text-emerald-500" speed={20} />;
       }
+      if (type === 'boot') {
+        return <div className="text-cyan-400">{output}</div>;
+      }
       return <div className="text-emerald-500">{output}</div>;
+    }
+
+    if (!Array.isArray(output)) {
+      return <div className="text-red-400">Error: Invalid output format</div>;
     }
 
     return output.map((item, index) => {
@@ -231,8 +400,44 @@ const handleCommand = (cmd:string) => {
     });
   };
 
+  // Theme-based styling
+  const getThemeClasses = () => {
+    const baseContainer = "rounded-b-lg p-4 shadow-md h-[75vh] overflow-y-auto";
+    
+    if (whiteGradient) {
+      return {
+        container: `bg-gradient-to-br from-white via-gray-50 to-blue-50 ${baseContainer} border border-gray-200`,
+        prompt: "text-blue-600",
+        input: "bg-transparent outline-none ml-2 text-gray-800 flex-1"
+      };
+    }
+    
+    switch (theme) {
+      case 'hacker':
+        return {
+          container: `bg-black ${baseContainer} border border-green-500/30`,
+          prompt: "text-green-400",
+          input: "bg-transparent outline-none ml-2 text-green-400 flex-1"
+        };
+      case 'light':
+        return {
+          container: `bg-[#F2F2F2] font-bold ${baseContainer} border border-gray-300`,
+          prompt: "text-blue-600",
+          input: "bg-transparent outline-none ml-2 text-gray-800 flex-1"
+        };
+      default:
+        return {
+          container: `bg-[#0f172a] ${baseContainer} border border-gray-600/30`,
+          prompt: "text-emerald-400",
+          input: "bg-transparent outline-none ml-2 text-white flex-1"
+        };
+    }
+  };
+
+  const themeClasses = getThemeClasses();
+
   return (
-    <div className="bg-[#0f172a] rounded-b-lg p-4 shadow-md border border-gray-600/30 h-[75vh] overflow-y-auto">
+    <div className={themeClasses.container}>
       {lines.map((line, index) => (
         <motion.div
           key={index}
@@ -242,23 +447,34 @@ const handleCommand = (cmd:string) => {
           className="mb-2"
         >
           {line.prompt && (
-            <div className="text-sm text-emerald-400 mb-1">{line.prompt}</div>
+            <div className={`text-sm ${themeClasses.prompt} mb-1`}>{line.prompt}</div>
           )}
           <div className="text-sm">
             {renderOutput(line.output, line.type)}
           </div>
         </motion.div>
       ))}
-      <div className="flex items-center mt-4">
-        <span className="text-emerald-400">abeer@portfolio : ~ $</span>
-        <input
-          className="bg-transparent outline-none ml-2 text-white flex-1"
-          value={input}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          autoFocus
-        />
-      </div>
+      {!booting && (
+        <div className="flex items-center mt-4">
+          <span className={themeClasses.prompt}>abeer@portfolio : ~ $</span>
+          <input
+            className={themeClasses.input}
+            value={input}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              setInput(e.target.value);
+              setSuggestion(null); // Clear suggestions when typing
+            }}
+            onKeyDown={handleKeyDown}
+            autoFocus
+            disabled={booting}
+          />
+        </div>
+      )}
+      {suggestion && (
+        <div className="text-gray-400 text-sm ml-2 select-none">
+          Suggestions: {suggestion}
+        </div>
+      )}
       <div ref={bottomRef} />
     </div>
   );
