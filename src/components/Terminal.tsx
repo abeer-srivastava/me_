@@ -23,7 +23,7 @@ interface Line {
 
 const Terminal = () => {
   const [lines, setLines] = useState<Line[]>([
-    { output: "Weelcome to my portfolio! Type \"help\" to see available commands.", type: "welcome" }
+    { output: "Welcome to my portfolio! Type \"help\" to see available commands.", type: "welcome" }
   ]);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement|null>(null);
@@ -32,139 +32,143 @@ const Terminal = () => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [lines]);
 
-  const commands:Record<string, Command> = {
-    help: {
-      type: "help",
-      content: [
-        { text: "Available commands:", color: "text-green-400" },
-        { text: "• about - Learn about me", color: "text-green-300" },
-        { text: "• skills - View my technical skills", color: "text-green-300" },
-        { text: "• projects - See my projects", color: "text-green-300" },
-        { text: "• experience - View my work experience", color: "text-green-300" },
-        { text: "• education - View my education", color: "text-green-300" },
-        { text: "• resume - Download my resume", color: "text-green-300" },
-        { text: "• contact - Get my contact information", color: "text-green-300" },
-        { text: "• clear - Clear the terminal", color: "text-green-300" },
-        { text: "•  help - Show this help message", color: "text-green-300" },
-      ]
-    },
+ const commands: Record<string, Command> = {
+  help: {
+    type: "help",
+    content: [
+      { text: "Available commands:", color: "text-green-400" },
+      { text: "• about - Learn about me", color: "text-green-300" },
+      { text: "• skills - View my technical skills", color: "text-green-300" },
+      { text: "• projects - See my projects", color: "text-green-300" },
+      { text: "• experience - View my work experience", color: "text-green-300" },
+      { text: "• education - View my education", color: "text-green-300" },
+      { text: "• resume - Download my resume", color: "text-green-300" },
+      { text: "• contact - Get my contact information", color: "text-green-300" },
+      { text: "• clear - Clear the terminal", color: "text-green-300" },
+      { text: "• help - Show this help message", color: "text-green-300" },
+    ],
+  },
 
-    about: {
-      type: "about",
-      content: [
-        { text: "Abeer Srivastava", color: "text-blue-400 font-bold text-lg" },
-        { text: "Full Stack Developer | CSE @ SRMCEM", color: "text-blue-400" },
-        { text: "", color: "" },
-        { text: "I'm a Full Stack Developer who loves building scalable and user-friendly applications, with strong proficiency in Python, C++, and JavaScript. Passionate about cloud technologies and data science, continuously exploring emerging frameworks to solve real-world problems through innovative technology solutions..", color: "text-blue-300" }
-      ]
-    },
+  about: {
+    type: "about",
+    content: [
+      { text: "Abeer Srivastava", color: "text-blue-400 font-bold text-lg" },
+      { text: "Full Stack Developer | CSE @ SRMCEM", color: "text-blue-400" },
+      { text: "", color: "" },
+      {
+        text: "I'm a passionate Full-Stack Developer skilled in software engineering, cloud computing, and scalable solution design. Experienced in applying AI/ML to build innovative, high-performance applications that combine creativity and technology.",
+        color: "text-blue-300",
+      },
+    ],
+  },
 
-    skills: {
-      type: "skills",
-      content: [
-        { text: "Technical Skills:", color: "text-purple-400 font-bold" },
-        { text: "", color: "" },
-        { text: "Languages:", color: "text-purple-300 font-semibold" },
-        { text: "C++, C, Java, SQL, JavaScript, TypeScript, Python", color: "text-purple-300" },
-        { text: "", color: "" },
-        { text: "Frontend:", color: "text-purple-300 font-semibold" },
-        { text: "React, TailwindCSS, JavaScript", color: "text-purple-300" },
-        { text: "", color: "" },
-        { text: "Backend:", color: "text-purple-300 font-semibold" },
-        { text: "Node.js, Express.js", color: "text-purple-300" },
-        { text: "", color: "" },
-        { text: "Databases:", color: "text-purple-300 font-semibold" },
-        { text: "MongoDb, PostgreSQL", color: "text-purple-300" },
-        { text: "", color: "" },
-        { text: "Cloud & DevOps:", color: "text-purple-300 font-semibold" },
-        { text: "AWS Cloud, Google Cloud, IBM Cloud, CI/CD", color: "text-purple-300" },
-        { text: "", color: "" },
-        { text: "Domains:", color: "text-purple-300 font-semibold" },
-        { text: "Fullstack Development, Data Science", color: "text-purple-300" }
-      ]
-    },
+  skills: {
+    type: "skills",
+    content: [
+      { text: "Technical Skills:", color: "text-purple-400 font-bold" },
+      { text: "", color: "" },
+      { text: "Programming Languages:", color: "text-purple-300 font-semibold" },
+      { text: "C++, C, Java, Python, JavaScript, TypeScript, SQL", color: "text-purple-300" },
+      { text: "", color: "" },
+      { text: "Web & Full-Stack Development:", color: "text-purple-300 font-semibold" },
+      { text: "React.js, Next.js, Express.js, EJS, REST APIs, WebSockets", color: "text-purple-300" },
+      { text: "", color: "" },
+      { text: "Databases:", color: "text-purple-300 font-semibold" },
+      { text: "MongoDB, PostgreSQL, MySQL", color: "text-purple-300" },
+      { text: "", color: "" },
+      { text: "Cloud & DevOps:", color: "text-purple-300 font-semibold" },
+      { text: "AWS Cloud, Google Cloud, IBM Cloud", color: "text-purple-300" },
+      { text: "", color: "" },
+      { text: "Data & AI/ML:", color: "text-purple-300 font-semibold" },
+      { text: "Data Science, Machine Learning, Artificial Intelligence", color: "text-purple-300" },
+    ],
+  },
 
-    projects: {
-      type: "projects",
-      content: [
-        { text: "Featured Projects:", color: "text-orange-400 font-bold" },
-        { text: "", color: "" },
-        { text: "Second Brain", color: "text-orange-300 font-semibold" },
-        { text: "Second Brain is a digital tool designed to help individuals capture, organize, and connect information like notes, tasks, and ideas.", color: "text-orange-300" },
-        { text: "Tools: React, TailwindCSS, JavaScript", color: "text-orange-500" },
-        { text: "", color: "" },
-        { text: "GenAI Post Generator", color: "text-orange-300 font-semibold" },
-        { text: "This tool is designed to help LinkedIn influencers generate new posts by learning from their past content. By analyzing previous posts.", color: "text-orange-300" },
-        { text: "Tools: Python, Streamlit, Gemini Model", color: "text-orange-500" },
-        { text: "", color: "" },
-        { text: "Stock Trading Platform", color: "text-orange-300 font-semibold" },
-        { text: "Developed a full-stack stock trading simulator using React.js (frontend) and Node.js (backend), integrated with a real-time market data API.", color: "text-orange-300" },
-        { text: "Tools: JavaScript, React, Tailwind (Frontend), Node.js, Express (Backend)", color: "text-orange-500" }
-      ]
-    },
+  projects: {
+    type: "projects",
+    content: [
+      { text: "Featured Projects:", color: "text-orange-400 font-bold" },
+      { text: "", color: "" },
 
-    experience: {
-      type: "experience",
-      content: [
-        { text: "Working Experience:", color: "text-cyan-400 font-bold" },
-        { text: "", color: "" },
-        { text: "Technical Member - Computer Society of India (CSI) - SRMCEM", color: "text-cyan-300 font-semibold" },
-        { text: "Lucknow, Uttar Pradesh | Oct 2023 - Jun 2024", color: "text-cyan-300" },
-        { text: "• Collaborated with a 10-member team to organize 5+ tech workshops", color: "text-cyan-300" },
-        { text: "• Enhanced leadership skills by leading a subgroup to develop a web-based project", color: "text-cyan-300" },
-        { text: "• Gained hands-on experience in software technologies, including Python and Cloud Computing, through structured training sessions", color: "text-cyan-300" }
-      ]
-    },
+      { text: "EchoBox", color: "text-orange-300 font-semibold" },
+      { text: "A full-stack platform for collecting anonymous event feedback with secure authentication, email verification, and AI-powered question suggestions.", color: "text-orange-300" },
+      { text: "Tools: Next.js, React, TailwindCSS, Framer Motion, NextAuth.js, MongoDB, Resend, Google Gemini API, Zod", color: "text-orange-500" },
+      { text: "", color: "" },
 
-    education: {
-      type: "education",
-      content: [
-        { text: "Education:", color: "text-indigo-400 font-bold" },
-        { text: "", color: "" },
-        { text: "Bachelor of Technology in Computer Science and Engineering", color: "text-indigo-300 font-semibold" },
-        { text: "Shri Ramswaroop Memorial College of Engineering and Management", color: "text-indigo-300" },
-        { text: "GPA: 8.6/10.0 | Aug 2022 - Present", color: "text-indigo-300" },
-        { text: "", color: "" },
-        { text: "Senior Secondary (Class XII)", color: "text-indigo-300 font-semibold" },
-        { text: "Kamla Nehru Institute of Child Education, Sultanpur | CBSE", color: "text-indigo-300" },
-        { text: "94.3% | Apr 2021 - Mar 2022", color: "text-indigo-300" },
-        { text: "", color: "" },
-        { text: "Secondary (Class X)", color: "text-indigo-300 font-semibold" },
-        { text: "Kamla Nehru Institute of Child Education, Sultanpur | CBSE", color: "text-indigo-300" },
-        { text: "93.4% | Apr 2019 - Mar 2020", color: "text-indigo-300" }
-      ]
-    },
+      { text: "PostGenie", color: "text-orange-300 font-semibold" },
+      { text: "An AI-powered content generation tool that analyzes LinkedIn posts to extract tone, style, and key themes, automating post creation in the user’s unique voice.", color: "text-orange-300" },
+      { text: "Tools: Python, Streamlit, Generative AI, Google Gemini API", color: "text-orange-500" },
+      { text: "", color: "" },
 
-    contact: {
-      type: "contact",
-      content: [
-        { text: "Contact Information:", color: "text-amber-400 font-bold" },
-        { text: "", color: "" },
-        { text: "Location:", color: "text-amber-300 font-semibold", inline: true },
-        { text: " Lucknow", color: "text-amber-300" },
-        { text: "Email:", color: "text-amber-300 font-semibold", inline: true },
-        { text: " abeerSrivastava16@gmail.com", color: "text-amber-300" },
-        { text: "Phone:", color: "text-amber-300 font-semibold", inline: true },
-        { text: " +91 7355336760", color: "text-amber-300" },
-        { text: "LinkedIn:", color: "text-amber-300 font-semibold", inline: true },
-        { text: " LinkedIn Profile", color: "text-amber-300 hover:text-amber-300 cursor-pointer"},
-        { text: "GitHub:", color: "text-amber-300 font-semibold", inline: true },
-        { text: " GitHub Profile", color: "text-amber-300 hover:text-amber-300 cursor-pointer" }
-      ]
-    },
+      { text: "Second Brain", color: "text-orange-300 font-semibold" },
+      { text: "A knowledge management platform with tagging, categorization, and JWT-secured sharing. Integrated Qdrant VectorDB and Gemini API for AI-powered search and knowledge retrieval.", color: "text-orange-300" },
+      { text: "Tools: React, TypeScript, TailwindCSS, Node.js, Express, MongoDB, JWT, Qdrant, Google Gemini API", color: "text-orange-500" },
+    ],
+  },
 
-   resume: {
-      type: "resume",
-      content: [
-        { text: "Download my resume here:", color: "text-pink-400" },
-        {
-          text: "📄 Abeer_srivastava_.pdf",
-          color: "text-pink-500 hover:text-pink-400 cursor-pointer underline",
-          href: "/Abeer_srivastava_.pdf"
-        }
-      ]
-    }
-  };
+  experience: {
+    type: "experience",
+    content: [
+      { text: "Leadership & Involvement:", color: "text-cyan-400 font-bold" },
+      { text: "", color: "" },
+      { text: "Technical Member - Computer Society of India (CSI), SRMCEM", color: "text-cyan-300 font-semibold" },
+      { text: "Lucknow, Uttar Pradesh | Oct 2023 - Jun 2024", color: "text-cyan-300" },
+      { text: "• Organized 5+ technical workshops with a 10-member team, engaging 200+ students.", color: "text-cyan-300" },
+      { text: "• Gained hands-on experience with Python and Cloud Computing through structured sessions.", color: "text-cyan-300" },
+      { text: "• Strengthened leadership and collaboration skills through event coordination and project development.", color: "text-cyan-300" },
+    ],
+  },
+
+  education: {
+    type: "education",
+    content: [
+      { text: "Education:", color: "text-indigo-400 font-bold" },
+      { text: "", color: "" },
+      { text: "Bachelor of Technology in Computer Science and Engineering", color: "text-indigo-300 font-semibold" },
+      { text: "Shri Ramswaroop Memorial College of Engineering and Management, Lucknow", color: "text-indigo-300" },
+      { text: "GPA: 8.6/10.0 | Aug 2022 - Present", color: "text-indigo-300" },
+      { text: "", color: "" },
+      { text: "Senior Secondary (Class XII)", color: "text-indigo-300 font-semibold" },
+      { text: "Kamla Nehru Institute of Child Education, Sultanpur | CBSE", color: "text-indigo-300" },
+      { text: "94.3% | Apr 2021 - Mar 2022", color: "text-indigo-300" },
+      { text: "", color: "" },
+      { text: "Secondary (Class X)", color: "text-indigo-300 font-semibold" },
+      { text: "Kamla Nehru Institute of Child Education, Sultanpur | CBSE", color: "text-indigo-300" },
+      { text: "93.4% | Apr 2019 - Mar 2020", color: "text-indigo-300" },
+    ],
+  },
+
+  contact: {
+    type: "contact",
+    content: [
+      { text: "Contact Information:", color: "text-amber-400 font-bold" },
+      { text: "", color: "" },
+      { text: "Location:", color: "text-amber-300 font-semibold", inline: true },
+      { text: " Lucknow", color: "text-amber-300" },
+      { text: "Email:", color: "text-amber-300 font-semibold", inline: true },
+      { text: " abeersrivastava16@gmail.com", color: "text-amber-300" },
+      { text: "Phone:", color: "text-amber-300 font-semibold", inline: true },
+      { text: " +91 7355336760", color: "text-amber-300" },
+      { text: "LinkedIn:", color: "text-amber-300 font-semibold", inline: true },
+      { text: " linkedin.com/in/abeer-srivastava-a90797290", color: "text-amber-300 hover:text-amber-300 cursor-pointer" },
+      { text: "GitHub:", color: "text-amber-300 font-semibold", inline: true },
+      { text: " github.com/abeer-srivastava", color: "text-amber-300 hover:text-amber-300 cursor-pointer" },
+    ],
+  },
+
+  resume: {
+    type: "resume",
+    content: [
+      { text: "Download my resume here:", color: "text-pink-400" },
+      {
+        text: "📄 Abeer_Srivastava_Resume.pdf",
+        color: "text-pink-500 hover:text-pink-400 cursor-pointer underline",
+        href: "/Abeer_srivastava_.pdf",
+      },
+    ],
+  },
+};
+
 const handleCommand = (cmd:string) => {
     if (cmd === 'clear') {
       setLines([]);
@@ -261,3 +265,4 @@ const handleCommand = (cmd:string) => {
 };
 
 export default Terminal;
+
