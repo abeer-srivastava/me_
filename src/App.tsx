@@ -11,15 +11,15 @@ export default function App() {
 
   const getBackgroundClasses = () => {
     if (whiteGradient) {
-      return "bg-gradient-to-br from-white via-gray-100 to-blue-100 text-gray-800 font-bold min-h-screen font-mono p-5 flex justify-center items-start";
+      return "bg-gradient-to-br from-[#E0EAFC] to-[#CFDEF3] text-gray-800  min-h-screen font-mono p-5 flex justify-center items-start";
     }
-    return "bg-gradient-to-br from-[#0a0f1c] via-[#111827] to-[#1a1e28] text-white min-h-screen font-mono p-5 flex justify-center items-start";
+    return "bg-gradient-to-br from-[#141E30] to-[#243B55] text-white min-h-screen font-mono p-5 flex justify-center items-start";
   };
-
+// linear-gradient(90deg, #4b6cb7 0%, #182848 100%)
   return (
     <div className={getBackgroundClasses()}>
       <div className="w-full max-w-4xl">
-        <div className={`${whiteGradient ? 'bg-white/80 backdrop-blur-md border-gray-200' : 'bg-[#1f2937]/80 backdrop-blur-md border-gray-600/30'} rounded-t-lg px-4 py-2 flex items-center justify-between text-sm shadow-inner border`}>
+        <div className={`${whiteGradient ? 'bg-white/80 backdrop-blur-md border-gray-200' : 'bg-[#09203f] backdrop-blur-md border-gray-900'} rounded-t-lg px-4 py-2 flex items-center justify-between text-sm shadow-inner border`}>
           <div className="flex items-center space-x-2">
             <div className="w-3 h-3 rounded-full bg-red-500"></div>
             <div className="w-3 h-3 rounded-full bg-yellow-400"></div>

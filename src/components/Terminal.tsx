@@ -91,7 +91,7 @@ const Terminal = ({ whiteGradient }: TerminalProps) => {
       { text: "• quote - Display a random programming quote", color: "text-cyan-300" },
       { text: "• time - Show current time", color: "text-cyan-300" },
       { text: "• date - Show current date", color: "text-cyan-300" },
-      { text: "• sudo [command] - Try to run as superuser (Easter egg)", color: "text-cyan-300" },
+      { text: "• sudo [command] - Try to run as superuser", color: "text-cyan-300" },
     ],
   },
 
@@ -217,7 +217,7 @@ const Terminal = ({ whiteGradient }: TerminalProps) => {
   story: {
     type: "story",
     content: [
-      { text: "👦 My Journey:", color: "text-yellow-400 font-bold" },
+      { text: "📖 My Journey:", color: "text-yellow-400 font-bold" },
       { text: "", color: "" },
       { text: "I started coding in high school out of curiosity and fell in love with the logic behind software. Over the years, I've worked with web, cloud, and AI technologies to build real-world solutions.", color: "text-yellow-300" },
       { text: "My vision is to combine technology and creativity to build systems that make a difference.", color: "text-yellow-300" }
@@ -373,7 +373,7 @@ const handleCommand = (cmd:string) => {
     }
 
     if (!Array.isArray(output)) {
-      return <div className="text-red-400">Error: Invalid output format</div>;
+      return <div className="text-red-400">Error:Anonymous Action</div>;
     }
 
     return output.map((item, index) => {
@@ -481,4 +481,5 @@ const handleCommand = (cmd:string) => {
 };
 
 export default Terminal;
+
 
