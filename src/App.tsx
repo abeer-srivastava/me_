@@ -11,7 +11,7 @@ export default function App() {
 
   const getBackgroundClasses = () => {
     if (whiteGradient) {
-      return "bg-gradient-to-br from-[#E0EAFC] to-[#CFDEF3] text-gray-800  min-h-screen font-mono p-5 flex justify-center items-start";
+      return "bg-gradient-to-br from-[#E0EAFC] to-[#CFDEF3] text-gray-800 font-bold min-h-screen font-mono p-5 flex justify-center items-start";
     }
     return "bg-gradient-to-br from-[#141E30] to-[#243B55] text-white min-h-screen font-mono p-5 flex justify-center items-start";
   };
