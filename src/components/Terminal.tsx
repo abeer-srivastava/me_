@@ -26,7 +26,7 @@ const bootSequence = [
   "Loading projects...",
   "Loading skills modules...",
   "Loading contact info...",
-  "Environment ready ✅"
+  "Environment ready "
 ];
 
 interface TerminalProps {
