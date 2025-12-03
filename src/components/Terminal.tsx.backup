@@ -1,0 +1,683 @@
+import { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { 
+  List, Wrench, Gamepad2, User, Target, Code, FileCode, Globe, 
+  Database, Cloud, Brain, Rocket, Mail, MapPin, Phone, Linkedin, 
+  Github, FileDown, Download, BookOpen, Trophy, Users, GraduationCap,
+  Calendar, Building, AlertTriangle, Lightbulb, Sparkles
+} from 'lucide-react';
+import TypewriterText from './TypewriterText';
+import ASCIIArt from './ASCIIArt';
+import MatrixRain from './MatrixRain';
+import HackingSimulation from './HackingSimulation';
+import SnakeGame from './SnakeGame';
+import { getTheme, saveTheme, loadTheme, type ThemeType } from '../utils/themeManager';
+import { getCommandSuggestions, getClosestCommand } from '../utils/commandParser';
+import { getThemeColors } from '../utils/colorUtils';
+import type { ChangeEvent } from 'react';
+
+interface CommandContent {
+  text: string;
+  color?: string;
+  href?: string;
+  inline?: boolean;
+  icon?: React.ReactNode;
+}
+
+interface Command {
+  type: string;
+  content: CommandContent[] | JSX.Element;
+}
+
+interface Line {
+  prompt?: string;
+  output: string | CommandContent[] | JSX.Element;
+  type: string;
+  timestamp?: string;
+}
+
+const bootSequence = [
+  "Initializing portfolio environment...",
+  "Loading projects...",
+  "Loading skills modules...",
+  "Loading contact info...",
+  "Connecting to cloud services...",
+  "Environment ready ✓"
+];
+
+interface TerminalProps {
+  whiteGradient: boolean;
+}
+
+const Terminal = ({ whiteGradient }: TerminalProps) => {
+  const [lines, setLines] = useState<Line[]>([]);
+  const [input, setInput] = useState("");
+  const [booting, setBooting] = useState(true);
+  const [suggestion, setSuggestion] = useState<string | null>(null);
+  const [theme, setTheme] = useState<ThemeType>(() => loadTheme());
+  const [history, setHistory] = useState<string[]>(() => {
+    const saved = localStorage.getItem('terminalHistory');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [showMatrix, setShowMatrix] = useState(false);
+  const [startTime] = useState(Date.now());
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // Get theme-aware colors (all themes are now dark)
+  const colors = getThemeColors(false);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [lines]);
+
+  // Boot sequence effect
+  useEffect(() => {
+    if (booting) {
+      let index = 0;
+      const interval = setInterval(() => {
+        if (index < bootSequence.length) {
+          setLines(prev => [...prev, { output: bootSequence[index], type: 'boot' }]);
+          index++;
+        } else {
+          setBooting(false);
+          setLines(prev => [
+            ...prev,
+            { output: <ASCIIArt type="banner" />, type: 'banner' },
+            { output: "Type 'help' to see available commands.", type: "welcome" }
+          ]);
+          clearInterval(interval);
+        }
+      }, 500);
+      return () => clearInterval(interval);
+    }
+  }, [booting]);
+
+  const getUptime = (): string => {
+    const elapsed = Date.now() - startTime;
+    const minutes = Math.floor(elapsed / 60000);
+    const hours = Math.floor(minutes / 60);
+    if (hours > 0) return `${hours}h ${minutes % 60}m`;
+    return `${minutes}m`;
+  };
+
+  const commands: Record<string, Command> = {
+    help: {
+      type: "help",
+      content: [
+        { text: "Available Commands:", color: `${colors.h1} text-lg` },
+        { text: "", color: "" },
+        { text: "Core Commands", color: colors.h3, icon: <List className="inline w-4 h-4 mr-2" /> },
+        { text: "  about       - Learn about me", color: colors.coreCommand },
+        { text: "  skills      - View my technical skills", color: colors.coreCommand },
+        { text: "  projects    - See my projects", color: colors.coreCommand },
+        { text: "  experience  - View my work experience", color: colors.coreCommand },
+        { text: "  education   - View my education", color: colors.coreCommand },
+        { text: "  resume      - Download my resume", color: colors.coreCommand },
+        { text: "  contact     - Get my contact information", color: colors.coreCommand },
+        { text: "  story       - Read my coding journey", color: colors.coreCommand },
+        { text: "  goals       - See my professional goals", color: colors.coreCommand },
+        { text: "  social      - View my social links", color: colors.coreCommand },
+        { text: "", color: "" },
+        { text: "Utility Commands", color: colors.h2, icon: <Wrench className="inline w-4 h-4 mr-2" /> },
+        { text: "  clear       - Clear the terminal", color: colors.utilityCommand },
+        { text: "  help        - Show this help message", color: colors.utilityCommand },
+        { text: "  banner      - Re-display ASCII welcome banner", color: colors.utilityCommand },
+        { text: "  whoami      - Display user info", color: colors.utilityCommand },
+        { text: "  fetch       - Show system info (neofetch style)", color: colors.utilityCommand },
+        { text: "  theme       - Switch terminal theme", color: colors.utilityCommand },
+        { text: "              [default|hacker|light|cyber|matrix]", color: colors.utilityCommand },
+        { text: "  history     - Show command history", color: colors.utilityCommand },
+        { text: "  quote       - Display a random programming quote", color: colors.utilityCommand },
+        { text: "  time        - Show current time", color: colors.utilityCommand },
+        { text: "  date        - Show current date", color: colors.utilityCommand },
+        { text: "", color: "" },
+        { text: "Easter Eggs", color: `${colors.accent} font-semibold`, icon: <Gamepad2 className="inline w-4 h-4 mr-2" /> },
+        { text: "  hack        - Run hacking simulation", color: colors.easterEgg },
+        { text: "  matrix      - Matrix rain effect", color: colors.easterEgg },
+        { text: "  snake       - Play snake game", color: colors.easterEgg },
+        { text: "  sudo        - Try to run as superuser 😏", color: colors.easterEgg },
+      ],
+    },
+
+    about: {
+      type: "about",
+      content: [
+        { text: "Abeer Srivastava", color: "text-blue-300 font-bold text-xl", icon: <User className="inline w-5 h-5 mr-2" /> },
+        { text: "Full Stack Developer | CSE @ SRMCEM", color: "text-blue-400 text-lg" },
+        { text: "", color: "" },
+        {
+          text: "I'm a passionate Full-Stack Developer skilled in software engineering, cloud computing, and scalable solution design. Experienced in applying AI/ML to build innovative, high-performance applications that combine creativity and technology.",
+          color: "text-blue-300",
+        },
+        { text: "", color: "" },
+        { text: "Specializations", color: "text-blue-300 font-semibold", icon: <Target className="inline w-4 h-4 mr-2" /> },
+        { text: "  • Full-Stack Web Development", color: "text-blue-300" },
+        { text: "  • Cloud Computing & DevOps", color: "text-blue-300" },
+        { text: "  • AI/ML Integration", color: "text-blue-300" },
+        { text: "  • Scalable System Design", color: "text-blue-300" },
+      ],
+    },
+
+    skills: {
+      type: "skills",
+      content: [
+        { text: "💻 Technical Skills", color: "text-purple-400 font-bold text-xl" },
+        { text: "", color: "" },
+        { text: "📝 Programming Languages:", color: "text-purple-300 font-semibold" },
+        { text: "  C++ • C • Java • Python • JavaScript • TypeScript • SQL", color: "text-purple-300" },
+        { text: "", color: "" },
+        { text: "🌐 Web & Full-Stack Development:", color: "text-purple-300 font-semibold" },
+        { text: "  React.js • Next.js • Express.js • EJS • REST APIs • WebSockets", color: "text-purple-300" },
+        { text: "", color: "" },
+        { text: "🗄️ Databases:", color: "text-purple-300 font-semibold" },
+        { text: "  MongoDB • PostgreSQL • MySQL", color: "text-purple-300" },
+        { text: "", color: "" },
+        { text: "☁️ Cloud & DevOps:", color: "text-purple-300 font-semibold" },
+        { text: "  AWS Cloud • Google Cloud • IBM Cloud", color: "text-purple-300" },
+        { text: "", color: "" },
+        { text: "🤖 Data & AI/ML:", color: "text-purple-300 font-semibold" },
+        { text: "  Data Science • Machine Learning • Artificial Intelligence", color: "text-purple-300" },
+      ],
+    },
+
+    projects: {
+      type: "projects",
+      content: [
+        { text: "🚀 Featured Projects", color: "text-orange-400 font-bold text-xl" },
+        { text: "", color: "" },
+
+        { text: "1️⃣ EchoBox", color: "text-orange-300 font-semibold text-lg" },
+        { text: "   A full-stack platform for collecting anonymous event feedback with secure", color: "text-orange-300" },
+        { text: "   authentication, email verification, and AI-powered question suggestions.", color: "text-orange-300" },
+        { text: "   🛠️ Tech: Next.js, React, TailwindCSS, Framer Motion, NextAuth.js,", color: "text-orange-500 text-sm" },
+        { text: "          MongoDB, Resend, Google Gemini API, Zod", color: "text-orange-500 text-sm" },
+        { text: "", color: "" },
+
+        { text: "2️⃣ PostGenie", color: "text-orange-300 font-semibold text-lg" },
+        { text: "   An AI-powered content generation tool that analyzes LinkedIn posts to", color: "text-orange-300" },
+        { text: "   extract tone, style, and key themes, automating post creation in the", color: "text-orange-300" },
+        { text: "   user's unique voice.", color: "text-orange-300" },
+        { text: "   🛠️ Tech: Python, Streamlit, Generative AI, Google Gemini API", color: "text-orange-500 text-sm" },
+        { text: "", color: "" },
+
+        { text: "3️⃣ Second Brain", color: "text-orange-300 font-semibold text-lg" },
+        { text: "   A knowledge management platform with tagging, categorization, and", color: "text-orange-300" },
+        { text: "   JWT-secured sharing. Integrated Qdrant VectorDB and Gemini API for", color: "text-orange-300" },
+        { text: "   AI-powered search and knowledge retrieval.", color: "text-orange-300" },
+        { text: "   🛠️ Tech: React, TypeScript, TailwindCSS, Node.js, Express,", color: "text-orange-500 text-sm" },
+        { text: "          MongoDB, JWT, Qdrant, Google Gemini API", color: "text-orange-500 text-sm" },
+      ],
+    },
+
+    experience: {
+      type: "experience",
+      content: [
+        { text: "💼 Leadership & Involvement", color: "text-cyan-400 font-bold text-xl" },
+        { text: "", color: "" },
+        { text: "Technical Member - Computer Society of India (CSI), SRMCEM", color: "text-cyan-300 font-semibold text-lg" },
+        { text: "📍 Lucknow, Uttar Pradesh | 📅 Oct 2023 - Jun 2024", color: "text-cyan-400 text-sm" },
+        { text: "", color: "" },
+        { text: "  • Organized 5+ technical workshops with a 10-member team, engaging 200+ students", color: "text-cyan-300" },
+        { text: "  • Gained hands-on experience with Python and Cloud Computing", color: "text-cyan-300" },
+        { text: "  • Strengthened leadership and collaboration skills through event coordination", color: "text-cyan-300" },
+      ],
+    },
+
+    education: {
+      type: "education",
+      content: [
+        { text: "🎓 Education", color: "text-indigo-400 font-bold text-xl" },
+        { text: "", color: "" },
+        { text: "Bachelor of Technology in Computer Science and Engineering", color: "text-indigo-300 font-semibold text-lg" },
+        { text: "Shri Ramswaroop Memorial College of Engineering and Management, Lucknow", color: "text-indigo-300" },
+        { text: "📊 GPA: 8.6/10.0 | 📅 Aug 2022 - Present", color: "text-indigo-400 text-sm" },
+        { text: "", color: "" },
+        { text: "Senior Secondary (Class XII)", color: "text-indigo-300 font-semibold" },
+        { text: "Kamla Nehru Institute of Child Education, Sultanpur | CBSE", color: "text-indigo-300" },
+        { text: "📊 94.3% | 📅 Apr 2021 - Mar 2022", color: "text-indigo-400 text-sm" },
+        { text: "", color: "" },
+        { text: "Secondary (Class X)", color: "text-indigo-300 font-semibold" },
+        { text: "Kamla Nehru Institute of Child Education, Sultanpur | CBSE", color: "text-indigo-300" },
+        { text: "📊 93.4% | 📅 Apr 2019 - Mar 2020", color: "text-indigo-400 text-sm" },
+      ],
+    },
+
+    contact: {
+      type: "contact",
+      content: [
+        { text: "📧 Contact Information", color: "text-amber-400 font-bold text-xl" },
+        { text: "", color: "" },
+        { text: "📍 Location:", color: "text-amber-300 font-semibold", inline: true },
+        { text: " Lucknow, Uttar Pradesh, India", color: "text-amber-300" },
+        { text: "✉️ Email:", color: "text-amber-300 font-semibold", inline: true },
+        { text: " abeersrivastava16@gmail.com", color: "text-amber-300" },
+        { text: "📱 Phone:", color: "text-amber-300 font-semibold", inline: true },
+        { text: " +91 7355336760", color: "text-amber-300" },
+        { text: "💼 LinkedIn:", color: "text-amber-300 font-semibold", inline: true },
+        { text: " linkedin.com/in/abeer-srivastava-a90797290", color: "text-amber-300 hover:text-amber-400 cursor-pointer" },
+        { text: "🐙 GitHub:", color: "text-amber-300 font-semibold", inline: true },
+        { text: " github.com/abeer-srivastava", color: "text-amber-300 hover:text-amber-400 cursor-pointer" },
+      ],
+    },
+
+    resume: {
+      type: "resume",
+      content: [
+        { text: "📄 Download Resume", color: "text-pink-400 font-bold text-xl" },
+        { text: "", color: "" },
+        { text: "Click below to download my resume:", color: "text-pink-400" },
+        {
+          text: "📥 Abeer_Srivastava_Resume.pdf",
+          color: "text-pink-500 hover:text-pink-400 cursor-pointer underline text-lg font-semibold",
+          href: "/Abeer_srivastava_.pdf",
+        },
+      ],
+    },
+
+    story: {
+      type: "story",
+      content: [
+        { text: "📖 My Journey", color: "text-yellow-400 font-bold text-xl" },
+        { text: "", color: "" },
+        { text: "I started coding in high school out of curiosity and fell in love with", color: "text-yellow-300" },
+        { text: "the logic behind software. Over the years, I've worked with web, cloud,", color: "text-yellow-300" },
+        { text: "and AI technologies to build real-world solutions.", color: "text-yellow-300" },
+        { text: "", color: "" },
+        { text: "My vision is to combine technology and creativity to build systems that", color: "text-yellow-300" },
+        { text: "make a difference in people's lives.", color: "text-yellow-300" },
+      ],
+    },
+
+    goals: {
+      type: "goals",
+      content: [
+        { text: "🎯 Professional Goals", color: "text-pink-400 font-bold text-xl" },
+        { text: "", color: "" },
+        { text: "1️⃣ Master Cloud & DevOps", color: "text-pink-300 text-lg" },
+        { text: "   Build expertise in AWS, Kubernetes, and CI/CD pipelines", color: "text-pink-300" },
+        { text: "", color: "" },
+        { text: "2️⃣ Contribute to Open Source", color: "text-pink-300 text-lg" },
+        { text: "   Give back to the community and collaborate with developers worldwide", color: "text-pink-300" },
+        { text: "", color: "" },
+        { text: "3️⃣ Build AI-powered web platforms", color: "text-pink-300 text-lg" },
+        { text: "   Create innovative solutions that leverage AI/ML technologies", color: "text-pink-300" },
+      ],
+    },
+
+    social: {
+      type: "social",
+      content: [
+        { text: "🌍 Social Links", color: "text-emerald-400 font-bold text-xl" },
+        { text: "", color: "" },
+        { text: "🐙 GitHub:", color: "text-emerald-300 font-semibold", inline: true },
+        { text: " github.com/abeer-srivastava", color: "text-emerald-300 cursor-pointer hover:text-emerald-400" },
+        { text: "💼 LinkedIn:", color: "text-emerald-300 font-semibold", inline: true },
+        { text: " linkedin.com/in/abeer-srivastava-a90797290", color: "text-emerald-300 cursor-pointer hover:text-emerald-400" },
+      ],
+    },
+
+    banner: {
+      type: "banner",
+      content: <ASCIIArt type="banner" />,
+    },
+
+    whoami: {
+      type: "whoami",
+      content: [
+        { text: "abeer", color: "text-cyan-400 font-bold text-lg" },
+        { text: "Full Stack Developer | CSE Student", color: "text-cyan-300" },
+        { text: "Location: Lucknow, India", color: "text-cyan-300" },
+      ],
+    },
+
+    fetch: {
+      type: "fetch",
+      content: <ASCIIArt type="neofetch" theme={theme} uptime={getUptime()} />,
+    },
+  };
+
+  const handleCommand = (cmd: string) => {
+    const timestamp = new Date().toLocaleTimeString();
+    
+    // Add command to history
+    const newHistory = [...history, cmd];
+    setHistory(newHistory);
+    localStorage.setItem('terminalHistory', JSON.stringify(newHistory));
+    setHistoryIndex(-1);
+
+    if (cmd === 'clear') {
+      setLines([]);
+      return;
+    }
+
+    // Theme command
+    if (cmd.startsWith('theme')) {
+      const parts = cmd.split(' ');
+      if (parts.length === 1) {
+        setLines([...lines, {
+          prompt: `abeer@portfolio : ~ $ ${cmd}`,
+          output: [
+            { text: "Available themes:", color: "text-cyan-400" },
+            { text: "  • default - Classic terminal theme", color: "text-cyan-300" },
+            { text: "  • hacker - Green hacker theme", color: "text-green-400" },
+            { text: "  • light - Light mode theme", color: "text-blue-600" },
+            { text: "  • cyber - Cyberpunk theme with glitch effects", color: "text-cyan-400" },
+            { text: "  • matrix - Matrix rain theme", color: "text-green-400" },
+            { text: "", color: "" },
+            { text: `Current theme: ${theme}`, color: "text-yellow-400" },
+            { text: "Usage: theme [name]", color: "text-gray-400" },
+          ],
+          type: 'theme',
+          timestamp
+        }]);
+        return;
+      }
+
+      const selectedTheme = parts[1] as ThemeType;
+      if (['default', 'hacker', 'light', 'cyber', 'matrix'].includes(selectedTheme)) {
+        setTheme(selectedTheme);
+        saveTheme(selectedTheme);
+        setLines([...lines, {
+          prompt: `abeer@portfolio : ~ $ ${cmd}`,
+          output: [{ text: `✓ Theme changed to ${selectedTheme} mode`, color: "text-green-400" }],
+          type: 'theme',
+          timestamp
+        }]);
+      } else {
+        setLines([...lines, {
+          prompt: `abeer@portfolio : ~ $ ${cmd}`,
+          output: [{ text: `Invalid theme: ${selectedTheme}. Use 'theme' to see available themes.`, color: "text-red-400" }],
+          type: 'error',
+          timestamp
+        }]);
+      }
+      return;
+    }
+
+    // History command
+    if (cmd === 'history') {
+      const historyOutput = history.map((h, i) => ({
+        text: `  ${String(i + 1).padStart(3, ' ')}  ${h}`,
+        color: "text-amber-300"
+      }));
+      setLines([...lines, {
+        prompt: `abeer@portfolio : ~ $ ${cmd}`,
+        output: [
+          { text: "Command History:", color: "text-amber-400 font-bold" },
+          { text: "", color: "" },
+          ...historyOutput
+        ],
+        type: 'history',
+        timestamp
+      }]);
+      return;
+    }
+
+    // Quote command
+    if (cmd === 'quote') {
+      const quotes = [
+        "\"Programs must be written for people to read, and only incidentally for machines to execute.\" – Harold Abelson",
+        "\"Talk is cheap. Show me the code.\" – Linus Torvalds",
+        "\"First, solve the problem. Then, write the code.\" – John Johnson",
+        "\"Simplicity is the soul of efficiency.\" – Austin Freeman",
+        "\"Code is like humor. When you have to explain it, it's bad.\" – Cory House",
+        "\"The best error message is the one that never shows up.\" – Thomas Fuchs",
+        "\"Any fool can write code that a computer can understand. Good programmers write code that humans can understand.\" – Martin Fowler",
+        "\"Make it work, make it right, make it fast.\" – Kent Beck",
+        "\"The most disastrous thing that you can ever learn is your first programming language.\" – Alan Kay",
+        "\"Debugging is twice as hard as writing the code in the first place.\" – Brian Kernighan"
+      ];
+      const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+      setLines([...lines, {
+        prompt: `abeer@portfolio : ~ $ ${cmd}`,
+        output: [{ text: randomQuote, color: "text-indigo-400 italic" }],
+        type: 'quote',
+        timestamp
+      }]);
+      return;
+    }
+
+    // Time and date commands
+    if (cmd === 'time' || cmd === 'date') {
+      const now = new Date();
+      const formatted = cmd === 'time' ? now.toLocaleTimeString() : now.toDateString();
+      setLines([...lines, {
+        prompt: `abeer@portfolio : ~ $ ${cmd}`,
+        output: [{ text: formatted, color: "text-cyan-300 font-mono text-lg" }],
+        type: 'time',
+        timestamp
+      }]);
+      return;
+    }
+
+    // Sudo command
+    if (cmd.startsWith('sudo')) {
+      setLines([...lines, {
+        prompt: `abeer@portfolio : ~ $ ${cmd}`,
+        output: [
+          { text: "🚨 ACCESS DENIED 🚨", color: "text-red-500 font-bold text-lg" },
+          { text: "Nice try! But you don't have sudo privileges here 😏", color: "text-red-400" },
+          { text: "System meltdown averted.", color: "text-yellow-400" },
+        ],
+        type: 'error',
+        timestamp
+      }]);
+      return;
+    }
+
+    // Easter egg: hack
+    if (cmd === 'hack') {
+      setLines([...lines, {
+        prompt: `abeer@portfolio : ~ $ ${cmd}`,
+        output: <HackingSimulation onComplete={() => inputRef.current?.focus()} />,
+        type: 'hack',
+        timestamp
+      }]);
+      return;
+    }
+
+    // Easter egg: matrix
+    if (cmd === 'matrix') {
+      setShowMatrix(true);
+      setLines([...lines, {
+        prompt: `abeer@portfolio : ~ $ ${cmd}`,
+        output: [{ text: "Entering the Matrix...", color: "text-green-400" }],
+        type: 'matrix',
+        timestamp
+      }]);
+      setTimeout(() => {
+        setShowMatrix(false);
+        inputRef.current?.focus();
+      }, 5000);
+      return;
+    }
+
+    // Easter egg: snake
+    if (cmd === 'snake') {
+      setLines([...lines, {
+        prompt: `abeer@portfolio : ~ $ ${cmd}`,
+        output: <SnakeGame onExit={() => inputRef.current?.focus()} />,
+        type: 'snake',
+        timestamp
+      }]);
+      return;
+    }
+
+    const command = commands[cmd];
+    if (command) {
+      setLines([...lines, {
+        prompt: `abeer@portfolio : ~ $ ${cmd}`,
+        output: command.content,
+        type: command.type,
+        timestamp
+      }]);
+    } else {
+      setLines([...lines, {
+        prompt: `abeer@portfolio : ~ $ ${cmd}`,
+        output: [
+          { text: `Command not found: ${cmd}`, color: "text-red-400" },
+          { text: "Type 'help' to see available commands", color: "text-gray-400 text-sm" }
+        ],
+        type: "error",
+        timestamp
+      }]);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const availableCommands = Object.keys(commands);
+
+    if (e.key === 'Enter') {
+      handleCommand(input.trim());
+      setInput("");
+      setSuggestion(null);
+      setHistoryIndex(-1);
+    }
+
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const closest = getClosestCommand(input, availableCommands);
+      if (closest) {
+        setInput(closest);
+        setSuggestion(null);
+      } else {
+        const suggestions = getCommandSuggestions(input, availableCommands);
+        if (suggestions.length > 0) {
+          setSuggestion(suggestions.join(" | "));
+        }
+      }
+    }
+
+    // Arrow up/down for history navigation
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (history.length > 0) {
+        const newIndex = historyIndex === -1 ? history.length - 1 : Math.max(0, historyIndex - 1);
+        setHistoryIndex(newIndex);
+        setInput(history[newIndex]);
+      }
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (historyIndex !== -1) {
+        const newIndex = Math.min(history.length - 1, historyIndex + 1);
+        if (newIndex === history.length - 1 && historyIndex === history.length - 1) {
+          setHistoryIndex(-1);
+          setInput("");
+        } else {
+          setHistoryIndex(newIndex);
+          setInput(history[newIndex]);
+        }
+      }
+    }
+  };
+
+  const renderOutput = (output: string | CommandContent[] | JSX.Element, type?: string) => {
+    if (typeof output === 'string') {
+      if (type === 'welcome') {
+        return <TypewriterText text={output} className="text-emerald-500" speed={20} />;
+      }
+      if (type === 'boot') {
+        return <div className="text-cyan-400">⚡ {output}</div>;
+      }
+      return <div className="text-emerald-500">{output}</div>;
+    }
+
+    // JSX Element (for components like ASCIIArt, SnakeGame, etc.)
+    if (typeof output === 'object' && 'type' in output) {
+      return output;
+    }
+
+    if (!Array.isArray(output)) {
+      return <div className="text-red-400">Error: Invalid output</div>;
+    }
+
+    return output.map((item, index) => {
+      if (item.text === '') {
+        return <div key={index} className="h-2"></div>;
+      }
+      if (item.href) {
+        return (
+          <a
+            key={index}
+            href={item.href}
+            download
+            className={`${item.color} block hover:underline`}
+          >
+            {item.text}
+          </a>
+        );
+      }
+      return (
+        <div key={index} className={`${item.color} ${item.inline ? 'inline' : ''}`}>
+          {item.text}
+        </div>
+      );
+    });
+  };
+
+  const currentTheme = whiteGradient ? getTheme('light') : getTheme(theme);
+  const baseContainer = "rounded-b-lg p-4 shadow-md h-[75vh] terminal-scroll";
+  const scrollbarClass = whiteGradient || theme === 'light' ? 'light-scrollbar' : '';
+
+  return (
+    <>
+      {showMatrix && <MatrixRain onComplete={() => setShowMatrix(false)} />}
+      <div className={`${currentTheme.container} ${baseContainer} ${scrollbarClass} scanline`}>
+        {lines.map((line, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.02, duration: 0.3 }}
+            className="mb-3"
+          >
+            {line.prompt && (
+              <div className="flex items-center justify-between">
+                <div className={`text-sm ${currentTheme.prompt} mb-1 font-mono tracking-wide`}>
+                  {line.prompt}
+                </div>
+                {line.timestamp && (
+                  <div className="text-xs opacity-60">{line.timestamp}</div>
+                )}
+              </div>
+            )}
+            <div className="text-sm leading-relaxed">
+              {renderOutput(line.output, line.type)}
+            </div>
+          </motion.div>
+        ))}
+        {!booting && (
+          <div className="flex items-center mt-4 sticky bottom-0 bg-inherit py-2">
+            <span className={`${currentTheme.prompt} font-mono tracking-wide`}>abeer@portfolio : ~ $</span>
+            <input
+              ref={inputRef}
+              className={`${currentTheme.input} font-mono tracking-wide`}
+              value={input}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                setInput(e.target.value);
+                setSuggestion(null);
+              }}
+              onKeyDown={handleKeyDown}
+              autoFocus
+              disabled={booting}
+              placeholder="Type 'help' for commands..."
+            />
+            <span className={`${currentTheme.prompt} cursor-blink ml-1`}></span>
+          </div>
+        )}
+        {suggestion && (
+          <div className="opacity-70 text-sm ml-2 mt-1 select-none font-mono">
+            💡 Suggestions: {suggestion}
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+    </>
+  );
+};
+
+export default Terminal;
