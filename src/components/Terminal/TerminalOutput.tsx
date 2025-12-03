@@ -15,7 +15,7 @@ interface TerminalOutputProps {
 }
 
 function OutputLine({ output, theme, enableTypewriter }: { output: CommandOutput; theme: Theme; enableTypewriter: boolean }) {
-  const { displayedText, isComplete } = useTypewriter(
+  const { displayedText } = useTypewriter(
     typeof output.content === 'string' ? output.content : '',
     20,
     enableTypewriter && output.type === 'text'
