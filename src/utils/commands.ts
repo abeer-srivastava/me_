@@ -33,11 +33,18 @@ const formatDate = () => {
 };
 
 const getUptime = (startTime: number) => {
-    const uptime = Date.now() - startTime;
+    const SPEED_FACTOR = 0.4; // show uptime at 40% of real time
+
+    let uptime = (Date.now() - startTime) * SPEED_FACTOR;
+
+    if (uptime < 0) uptime = 0; // safety
+
     const hours = Math.floor(uptime / (1000 * 60 * 60));
     const minutes = Math.floor((uptime % (1000 * 60 * 60)) / (1000 * 60));
+
     return `${hours} hours, ${minutes} minutes`;
 };
+
 
 export const createCommands = (
     setTheme: (theme: string) => void,

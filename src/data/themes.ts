@@ -36,16 +36,16 @@ export const themes: Record<string, Theme> = {
         displayName: 'Cyber Synthwave',
         colors: {
             background: '#0a0e27',
-            foreground: '#ff00ff',
-            cursor: '#00ffff',
-            selection: '#ff00ff33',
+            foreground: '#00ff41', // Matrix green
+            cursor: '#00d9ff', // Cyan
+            selection: '#00ff4133',
             black: '#1a1a2e',
             red: '#ff0055',
-            green: '#00ff9f',
+            green: '#00ff41', // Enhanced Matrix green
             yellow: '#ffcc00',
             blue: '#0099ff',
             magenta: '#ff00ff',
-            cyan: '#00ffff',
+            cyan: '#00d9ff',
             white: '#e0e0e0',
             brightBlack: '#555555',
             brightRed: '#ff0088',
@@ -57,7 +57,7 @@ export const themes: Record<string, Theme> = {
             brightWhite: '#ffffff',
         },
         effects: {
-            glow: false,
+            glow: true, // Enable glow effects
             scanlines: true,
         },
     },

@@ -1,33 +1,69 @@
 @import "tailwindcss";
+@import "./styles/animations.css";
 
+/* ============================================
+   CSS CUSTOM PROPERTIES - CYBERPUNK THEME
+   ============================================ */
+:root {
+    /* Cyberpunk Color Palette */
+    --color-bg-primary: #0a0e27;
+    --color-bg-secondary: #151b35;
+    --color-text-primary: #e0e0e0;
+    --color-text-secondary: #a0a0a0;
+    --color-accent-green: #00ff41;
+    --color-accent-cyan: #00d9ff;
+    --color-accent-purple: #b400ff;
+    --color-accent-magenta: #ff00ff;
+    --color-error-red: #ff0055;
+    --color-warning-yellow: #ffcc00;
+
+    /* Spacing Scale */
+    --spacing-xs: 8px;
+    --spacing-sm: 12px;
+    --spacing-md: 16px;
+    --spacing-lg: 20px;
+    --spacing-xl: 24px;
+    --spacing-2xl: 32px;
+
+    /* Typography */
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Courier New', monospace;
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.25rem;
+    --line-height-base: 1.6;
+    --line-height-relaxed: 1.8;
+
+    /* Effects */
+    --glow-intensity: 10px;
+    --transition-speed: 0.3s;
+    --border-radius: 8px;
+}
+
+/* ============================================
+   GLOBAL STYLES
+   ============================================ */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 body {
-    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Courier New', monospace;
+    font-family: var(--font-mono);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow: hidden;
+    line-height: var(--line-height-base);
 }
 
-/* Cursor blink animation */
-@keyframes blink {
-
-    0%,
-    49% {
-        opacity: 1;
-    }
-
-    50%,
-    100% {
-        opacity: 0;
-    }
-}
-
-/* Scrollbar styling */
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
 ::-webkit-scrollbar {
     width: 8px;
 }
@@ -37,20 +73,31 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(0, 255, 65, 0.3);
     border-radius: 4px;
+    transition: background var(--transition-speed) ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(0, 255, 65, 0.5);
 }
 
-/* Selection styling */
+/* ============================================
+   SELECTION STYLING
+   ============================================ */
 ::selection {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(0, 255, 65, 0.3);
+    color: var(--color-text-primary);
 }
 
-/* Remove input autofill background */
+::-moz-selection {
+    background: rgba(0, 255, 65, 0.3);
+    color: var(--color-text-primary);
+}
+
+/* ============================================
+   INPUT AUTOFILL OVERRIDE
+   ============================================ */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
@@ -59,19 +106,114 @@ input:-webkit-autofill:focus {
     transition: background-color 5000s ease-in-out 0s;
 }
 
-/* Smooth transitions */
-* {
-    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+/* ============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================ */
+.terminal-container {
+    contain: layout style paint;
+    will-change: scroll-position;
 }
 
-/* Prevent text selection on UI elements */
+.terminal-output {
+    contain: layout style;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
 .select-none {
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
 }
 
-/* Glow effect for cyber theme */
 .glow {
-    text-shadow: 0 0 10px currentColor;
+    text-shadow: 0 0 var(--glow-intensity) currentColor;
+}
+
+.glow-strong {
+    text-shadow:
+        0 0 5px currentColor,
+        0 0 10px currentColor,
+        0 0 15px currentColor;
+}
+
+/* Smooth transitions */
+.smooth-transition {
+    transition: all var(--transition-speed) ease;
+}
+
+/* CRT Scanline Overlay */
+.scanlines {
+    position: relative;
+    overflow: hidden;
+}
+
+.scanlines::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(0deg,
+            rgba(0, 0, 0, 0.15),
+            rgba(0, 0, 0, 0.15) 1px,
+            transparent 1px,
+            transparent 2px);
+    pointer-events: none;
+    z-index: 1000;
+}
+
+/* Chromatic Aberration Effect */
+.chromatic-text {
+    animation: chromatic 3s ease-in-out infinite;
+}
+
+/* ============================================
+   SPACING UTILITIES
+   ============================================ */
+.container-padding {
+    padding: var(--spacing-xl);
+}
+
+.command-prompt-padding {
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.output-block-padding {
+    padding: var(--spacing-md);
+}
+
+.section-spacing {
+    margin-top: 2em;
+    margin-bottom: 2em;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 768px) {
+    :root {
+        --spacing-xl: 16px;
+        --spacing-lg: 14px;
+        --spacing-md: 12px;
+        --font-size-sm: 0.8rem;
+    }
+
+    .container-padding {
+        padding: var(--spacing-md);
+    }
 }

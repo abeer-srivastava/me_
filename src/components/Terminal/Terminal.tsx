@@ -1,11 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { TerminalHeader } from './TerminalHeader';
 import { TerminalOutput } from './TerminalOutput';
 import { TerminalInput } from './TerminalInput';
+import { ScrollToBottom } from './ScrollToBottom';
 import { themes, defaultTheme } from '../../data/themes';
 import { createCommands, type CommandOutput } from '../../utils/commands';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useCommandHistory } from '../../hooks/useCommandHistory';
+import { useAutoScroll } from '../../hooks/useAutoScroll';
 import { portfolioData } from '../../data/portfolio';
 import { banner } from '../../utils/asciiArt';
 import { SnakeGame } from '../Games/SnakeGame';
@@ -25,8 +27,15 @@ export function Terminal() {
   const { addToHistory, navigateHistory } = useCommandHistory();
   const [showSnake, setShowSnake] = useState(false);
   const [showMatrix, setShowMatrix] = useState(false);
+  const [isFlickering, setIsFlickering] = useState(false);
 
   const theme = themes[currentTheme] || themes[defaultTheme];
+
+  // Auto-scroll hook
+  const { scrollRef, isNearBottom, scrollToBottom } = useAutoScroll([outputs], {
+    threshold: 50,
+    enabled: true,
+  });
 
   // Initialize with welcome message
   useEffect(() => {
@@ -49,7 +58,10 @@ export function Terminal() {
     setCurrentTheme(newTheme);
   }, [setCurrentTheme]);
 
-  const commands = createCommands(handleThemeChange, currentTheme, startTime);
+  const commands = useMemo(
+    () => createCommands(handleThemeChange, currentTheme, startTime),
+    [handleThemeChange, currentTheme, startTime]
+  );
 
   const executeCommand = useCallback(
     (input: string) => {
@@ -57,6 +69,10 @@ export function Terminal() {
       if (!trimmedInput) return;
 
       addToHistory(trimmedInput);
+
+      // Terminal flicker effect on command execution
+      setIsFlickering(true);
+      setTimeout(() => setIsFlickering(false), 100);
 
       // Parse command and arguments
       const parts = trimmedInput.split(' ');
@@ -120,7 +136,7 @@ export function Terminal() {
   );
 
   // Get all available command names for suggestions
-  const commandNames = Object.keys(commands);
+  const commandNames = useMemo(() => Object.keys(commands), [commands]);
 
   // Apply theme to root element
   useEffect(() => {
@@ -132,25 +148,31 @@ export function Terminal() {
 
   return (
     <div
-      className="h-screen w-screen flex items-center justify-center p-4"
+      className={`h-screen w-screen flex items-center justify-center container-padding ${
+        theme.effects?.scanlines ? 'scanlines' : ''
+      }`}
       style={{
         backgroundColor: theme.colors.black,
-        backgroundImage: theme.effects?.scanlines
-          ? 'repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15) 1px, transparent 1px, transparent 2px)'
-          : undefined,
       }}
     >
       <div
-        className="w-full max-w-5xl h-full max-h-[800px] rounded-lg overflow-hidden shadow-2xl flex flex-col"
+        className={`w-full max-w-5xl h-full max-h-[800px] rounded-lg overflow-hidden shadow-2xl flex flex-col terminal-container smooth-transition ${
+          isFlickering ? 'animate-flicker' : ''
+        } ${theme.effects?.glow ? 'animate-glow-pulse' : ''}`}
         style={{
           backgroundColor: theme.colors.background,
+          border: `1px solid ${theme.colors.foreground}33`,
           boxShadow: theme.effects?.glow
-            ? `0 0 40px ${theme.colors.foreground}33`
+            ? `0 0 40px ${theme.colors.foreground}33, 0 0 80px ${theme.colors.foreground}20`
             : '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
         }}
       >
         <TerminalHeader theme={theme} username={portfolioData.username} />
-        <TerminalOutput outputs={outputs} theme={theme} username={portfolioData.username} />
+        
+        <div ref={scrollRef} className="flex-1 overflow-y-auto">
+          <TerminalOutput outputs={outputs} theme={theme} username={portfolioData.username} />
+        </div>
+
         <TerminalInput
           theme={theme}
           username={portfolioData.username}
@@ -160,9 +182,13 @@ export function Terminal() {
         />
       </div>
 
+      {/* Scroll to Bottom Button */}
+      {!isNearBottom && <ScrollToBottom onClick={scrollToBottom} theme={theme} />}
+
       {/* Game Overlays */}
       {showSnake && <SnakeGame theme={theme} onExit={() => setShowSnake(false)} />}
       {showMatrix && <MatrixRain theme={theme} onExit={() => setShowMatrix(false)} />}
     </div>
   );
 }
+

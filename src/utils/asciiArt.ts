@@ -1,3 +1,4 @@
+// Pre-rendered ASCII banner for instant display (no blocking operations)
 export const banner = `
 ┌────────────────────────────────────────────────────────────────────────┐
 │                                                                        │
