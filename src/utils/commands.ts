@@ -1,7 +1,7 @@
 import { portfolioData } from '../data/portfolio';
 import { skills, skillCategories, currentlyLearning } from '../data/skills';
 import { projects } from '../data/projects';
-import { banner, neofetch, createProgressBar, dividers, createBox, cowsay, tree } from '../utils/asciiArt';
+import { banner, neofetch, createProgressBar, dividers, cowsay, tree } from '../utils/asciiArt';
 import { themes } from '../data/themes';
 
 export interface CommandOutput {
@@ -595,13 +595,17 @@ ${dividers.double}
         name: 'sudo',
         description: 'Try to run as superuser',
         usage: 'sudo <command>',
-        execute: (args) => [
-            {
-                type: 'error',
-                content: `[sudo] password for ${portfolioData.username}: 
-Permission denied. Nice try! 😏`,
-            },
-        ],
+        execute: (args) => {
+            const command = args.length > 0 ? args.join(' ') : 'command';
+            return [
+                {
+                    type: 'error',
+                    content: `[sudo] password for ${portfolioData.username}: 
+Permission denied. Nice try! 😏
+You tried to run: sudo ${command}`,
+                },
+            ];
+        },
     },
 
     exit: {
